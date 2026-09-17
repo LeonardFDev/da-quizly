@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,6 +28,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# DEBUG = False
+
+# ALLOWED_HOSTS = ["127.0.0.1"]
+
 
 # Application definition
 
@@ -37,9 +42,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    "rest_framework",
+    "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
+    'auth_app',
+    'quiz_management_app'
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -48,6 +59,19 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = [
+  'http://127.0.0.1:5500',
+  'http://localhost:5500',
+]
+
+CORS_ALLOWED_ORIGINS = [
+  'http://127.0.0.1:5500',
+  'http://localhost:5500',
+]
+
 
 ROOT_URLCONF = 'core.urls'
 
@@ -125,3 +149,24 @@ MAILERS = {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        "core.authentication.CookieJWTAuthentication",
+    ),
+
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+
+    
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "REFRESH_TOKEN_LIFETIME": timedelta(hours=12),
+}
+
+
+TEST_RUNNER = "core.test_runner.MyTestRunner"
+

@@ -7,12 +7,19 @@ from services.transcriber import download_and_transcribe
 class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
+        fields = ["id", "question_title", "question_options", "answer"]
+        read_only_fields = ["id", "question_title", "question_options", "answer"]
+
+
+class QuestionPostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Question
         fields = ["id", "question_title", "question_options", "answer", "created_at", "updated_at"]
         read_only_fields = ["id", "question_title", "question_options", "answer", "created_at", "updated_at"]
 
 
-class QuizzeCreateSerializer(serializers.ModelSerializer):
-    url = serializers.CharField(write_only=True)
+class QuizzeSerializer(serializers.ModelSerializer):
+    url = serializers.URLField(write_only=True)
     questions = QuestionSerializer(many=True, source="quiz_question", read_only = True)
 
     class Meta:
@@ -28,10 +35,54 @@ class QuizzeCreateSerializer(serializers.ModelSerializer):
         if request and request.method == "PATCH":
             self.fields["title"].read_only = False
             self.fields["description"].read_only = False
+            self.fields["url"].read_only = True
+            self.fields["questions"] = QuestionPostSerializer(many=True, source="quiz_question", read_only=True)
 
+    
     def create(self, validated_data):
         validated_data["video_url"] = validated_data.pop("url")
-        download_and_transcribe(validated_data["video_url"])
 
+        ai_output = download_and_transcribe(validated_data["video_url"])
+        self.validation_errors(ai_output)
+
+        validated_data["title"] = ai_output.get("title")
+        validated_data["description"] = ai_output.get("description")
+        quiz = Quiz.objects.create(**validated_data)
+
+        questions_data = ai_output.get("questions")
+        for question_data in questions_data:
+            Question.objects.create(quiz=quiz, **question_data)
+        return quiz
+
+    def validation_errors(self, ai_output):
+        ai_output_error = ai_output.get("ai_output_error")
         
-        return super().create(validated_data)
+        if ai_output.get("is_audio_download_error") == True:
+            raise serializers.ValidationError({"error_message": "No audio could be extracted under this url."})
+        elif ai_output_error and ai_output_error.code == 503:
+            raise serializers.ValidationError({"error_message": "The servers are overloaded. Please try again later."})
+        elif ai_output.get("is_ai_error") == True:
+            raise serializers.ValidationError({"error_message": "An unknown error has occurred. Please try again later."})
+        elif ai_output.get("is_json_error") == True:
+            raise serializers.ValidationError({"error_message": "There was an error in the output of the AI, please try again or try a different url"})
+
+        self.incorrect_json(ai_output)
+
+    def incorrect_json(self, ai_output):
+        self.incorrect_json_question(ai_output)
+        self.incorrect_json_quiz(ai_output)
+
+    def incorrect_json_question(self, ai_output):
+        questions_data = ai_output.get("questions")
+        
+        expected_keys_question = {"question_title", "question_options", "answer"}
+
+        for question_data in questions_data or []:
+            if set(question_data.keys()) != expected_keys_question:
+                raise serializers.ValidationError({"error": "The AI output an incorrect JSON structure. Please try again"})
+
+    def incorrect_json_quiz(self, ai_output):
+        expected_keys_quiz = {"title", "description", "questions"}
+
+        if set(ai_output.keys()) != expected_keys_quiz:
+            raise serializers.ValidationError({"error": "The AI output an incorrect JSON structure. Please try again"})

@@ -9,7 +9,7 @@ class Quiz(models.Model):
     description = models.TextField(blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    video_url = models.CharField(max_length=200)
+    video_url = models.URLField()
 
     def __str__(self):
         """Return the title and the id as a string."""

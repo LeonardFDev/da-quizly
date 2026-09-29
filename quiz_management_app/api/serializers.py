@@ -36,6 +36,8 @@ class QuizzeSerializer(serializers.ModelSerializer):
             self.fields["title"].read_only = False
             self.fields["description"].read_only = False
             self.fields["url"].read_only = True
+            
+        if request and request.method == "POST":
             self.fields["questions"] = QuestionPostSerializer(many=True, source="quiz_question", read_only=True)
 
     

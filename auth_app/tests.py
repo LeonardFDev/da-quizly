@@ -1,4 +1,4 @@
-"""Tests for the authentication and registration API."""
+"""Tests for the registration, authentication (login), logout and token update API."""
 
 from django.urls import reverse
 from rest_framework import status

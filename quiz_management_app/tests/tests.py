@@ -41,11 +41,21 @@ class QuizzesPostTests(APITestCase):
         self.client.cookies["access_token"] = str(access)
         self.client.cookies["refresh_token"] = str(refresh)
 
-    def test_quizzes_post_400(self):
+    def test_quizzes_url_without_audio_post_400(self):
         self.customized_setUp()
 
         url = reverse("quiz-list")
         data = {"url": "https://www.google.com/"}
+        response = self.client.post(url, data, format= "json")
+        
+        status_code_with_message(self, response)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_quizzes_without_url_post_400(self):
+        self.customized_setUp()
+
+        url = reverse("quiz-list")
+        data = {"url": ""}
         response = self.client.post(url, data, format= "json")
         
         status_code_with_message(self, response)

@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from urllib.parse import urlparse
 
 from quiz_management_app.models import Quiz, Question
 from services.transcriber import download_and_transcribe
@@ -42,7 +43,7 @@ class QuizzeSerializer(serializers.ModelSerializer):
 
     
     def create(self, validated_data):
-        validated_data["video_url"] = validated_data.pop("url")
+        self.customized_validated_video_url(validated_data)
 
         ai_output = download_and_transcribe(validated_data["video_url"])
         self.validation_errors(ai_output)
@@ -55,6 +56,13 @@ class QuizzeSerializer(serializers.ModelSerializer):
         for question_data in questions_data:
             Question.objects.create(quiz=quiz, **question_data)
         return quiz
+
+    def customized_validated_video_url(self, validated_data):
+        validated_data["video_url"] = validated_data.pop("url")
+        
+        url_info = urlparse(validated_data["video_url"])
+        if url_info.hostname == "youtu.be":
+            validated_data["video_url"]= f"https://www.youtube.com/watch?v={url_info.path.strip("/")}"
 
     def validation_errors(self, ai_output):
         ai_output_error = ai_output.get("ai_output_error")

@@ -168,5 +168,5 @@ SIMPLE_JWT = {
 }
 
 
-TEST_RUNNER = "core.test_runner.MyTestRunner"
+TEST_RUNNER = "core.test_runner.ContentTestProtocolDeletedRunner"
 

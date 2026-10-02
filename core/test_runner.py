@@ -1,6 +1,6 @@
 from django.test.runner import DiscoverRunner
 
-class MyTestRunner(DiscoverRunner):
+class ContentTestProtocolDeletedRunner(DiscoverRunner):
     """Before running a test, this is executed"""
 
     def setup_test_environment(self, **kwargs):

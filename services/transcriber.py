@@ -19,6 +19,9 @@ model = whisper.load_model("base") #turbo | base
 
 
 def customized_ffmpeg_exe():
+    """The program cannot cope with the file name ffmpeg-win-x86_64-v7.1.exe of imageio_ffmpeg, 
+       which is why you have to create a copy with a corresponding name change"""
+
     ORIGINAL_FFMPEG_EXE = Path(imageio_ffmpeg.get_ffmpeg_exe())
     KOPIE_OF_ORIGINAL_FFMPEG_EXE = Path("tools/ffmpeg.exe")
 
@@ -30,7 +33,9 @@ def customized_ffmpeg_exe():
     os.environ["PATH"] = str(ffmpeg_dir) + os.pathsep + os.environ["PATH"]
 
 
-def download_and_transcribe(url):
+def generate_quiz(url):
+    """downloads the audio, transcribes it into text, and generates a quiz from the text"""
+
     customized_ffmpeg_exe()
     download_audio_output = download_audio(url)
 
@@ -47,6 +52,8 @@ def download_and_transcribe(url):
 
 
 def download_audio(url):
+    """downloads the audio and transcribes it into a text"""
+
     ydl_opts = {
         "format": "bestaudio/best",
         "outtmpl": temporary_audio_file_create(),
@@ -63,6 +70,8 @@ def download_audio(url):
 
 
 def temporary_audio_file_create():
+    """returns a temporary audio filename with path"""
+
     FOLDER = "media/tmpl_audios/"
     
     random_id = uuid.uuid4().hex[:6]
@@ -72,6 +81,7 @@ def temporary_audio_file_create():
 
 
 def ai_create_quiz(transcribe):
+    """Pass the text to the AI with a prompt and get the quiz back in the form of a string JSON"""
     client = genai.Client()
     tmp_prompt = prompt_template
 
@@ -83,6 +93,7 @@ def ai_create_quiz(transcribe):
 
 
 def try_string_to_json(response):
+    """try to convert the string json to a proper JSON and return it"""
     try:
         remove_markdown_text = response.text.replace("```json", "").replace("```", "")
         string_to_json = json.loads(remove_markdown_text)

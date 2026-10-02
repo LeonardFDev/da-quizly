@@ -1,11 +1,14 @@
+"""Serializers for Quiz and Question API operations."""
+
 from rest_framework import serializers
 from urllib.parse import urlparse
 
 from quiz_management_app.models import Quiz, Question
-from services.transcriber import download_and_transcribe
+from services.transcriber import generate_quiz
 
 
 class QuestionSerializer(serializers.ModelSerializer):
+    """Nested serializer for the Question model in QuizSerializer (except POST requests)."""
     class Meta:
         model = Question
         fields = ["id", "question_title", "question_options", "answer"]
@@ -13,13 +16,16 @@ class QuestionSerializer(serializers.ModelSerializer):
 
 
 class QuestionPostSerializer(serializers.ModelSerializer):
+    """Nested serializer for the Question model in QuizSerializer (only POST requests)."""
     class Meta:
         model = Question
         fields = ["id", "question_title", "question_options", "answer", "created_at", "updated_at"]
         read_only_fields = ["id", "question_title", "question_options", "answer", "created_at", "updated_at"]
 
 
-class QuizzeSerializer(serializers.ModelSerializer):
+class QuizSerializer(serializers.ModelSerializer):
+    """Serializer for the Quiz model."""
+
     url = serializers.URLField(write_only=True)
     questions = QuestionSerializer(many=True, source="quiz_question", read_only = True)
 
@@ -29,6 +35,8 @@ class QuizzeSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "title", "description", "created_at", "updated_at", "video_url", "questions"]
 
     def __init__(self, *args, **kwargs):
+        """"at "PATCH" sets the title and description to "False" for read only and "True" for the URL.
+            at "POST" the questions field gets another serializer."""
         super().__init__(*args, **kwargs)
 
         request = self.context.get("request")
@@ -43,9 +51,10 @@ class QuizzeSerializer(serializers.ModelSerializer):
 
     
     def create(self, validated_data):
+        """Create quiz and questions."""
         self.customized_validated_video_url(validated_data)
 
-        ai_output = download_and_transcribe(validated_data["video_url"])
+        ai_output = generate_quiz(validated_data["video_url"])
         self.validation_errors(ai_output)
 
         validated_data["title"] = ai_output.get("title")
@@ -58,6 +67,7 @@ class QuizzeSerializer(serializers.ModelSerializer):
         return quiz
 
     def customized_validated_video_url(self, validated_data):
+        """In the case of a youtu.be link, it is changed to youtube.com link."""
         validated_data["video_url"] = validated_data.pop("url")
         
         url_info = urlparse(validated_data["video_url"])
@@ -65,6 +75,7 @@ class QuizzeSerializer(serializers.ModelSerializer):
             validated_data["video_url"]= f"https://www.youtube.com/watch?v={url_info.path.strip("/")}"
 
     def validation_errors(self, ai_output):
+        """checks if the AI output has an error and outputs it if necessary."""
         ai_output_error = ai_output.get("ai_output_error")
         
         if ai_output.get("is_audio_download_error") == True:
@@ -79,10 +90,12 @@ class QuizzeSerializer(serializers.ModelSerializer):
         self.incorrect_json(ai_output)
 
     def incorrect_json(self, ai_output):
+        """checks if the output for Quiz and Questions is a valid json"""
         self.incorrect_json_question(ai_output)
         self.incorrect_json_quiz(ai_output)
 
     def incorrect_json_question(self, ai_output):
+        """Checks if the output for questions is a valid JSON, if not, it throws a ValidationError."""
         questions_data = ai_output.get("questions")
         
         expected_keys_question = {"question_title", "question_options", "answer"}
@@ -92,6 +105,7 @@ class QuizzeSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({"error": "The AI output an incorrect JSON structure. Please try again"})
 
     def incorrect_json_quiz(self, ai_output):
+        """Checks if the output for quiz is a valid JSON, if not, it throws a ValidationError."""
         expected_keys_quiz = {"title", "description", "questions"}
 
         if set(ai_output.keys()) != expected_keys_quiz:

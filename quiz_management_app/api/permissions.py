@@ -1,4 +1,4 @@
-"""Permission classes for API access control for quiz."""
+"""Permission classes for API access control for quizzes."""
 
 from rest_framework.permissions import BasePermission
 

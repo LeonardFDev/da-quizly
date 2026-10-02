@@ -1,7 +1,11 @@
+"""Data and helper function for the "quizzes" test"""
+
 from django.contrib.auth.models import User
 
 
 def quizzes_data(owner):
+    """Generates 4 quizzes with the corresponding questions"""
+
     from quiz_management_app.models import Quiz, Question
 
     user2 =User.objects.create(username="testuserTest2", password="123456", email="testuser2@test.de")

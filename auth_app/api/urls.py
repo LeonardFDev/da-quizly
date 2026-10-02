@@ -1,3 +1,5 @@
+"""URL configuration for the register, login, logout and token refresh API."""
+
 from django.urls import path
 
 from .views import RegistrationView, LoginView, LogoutView, CustomTokenRefreshView

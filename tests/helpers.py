@@ -27,6 +27,7 @@ def is_it_successful(self, response):
         return "Test successful: No 🔴\n"
 
 def customized_cookie_output(response):
+    """This function will issue cookies if there are any"""
     cookies = response.cookies
     output = ""
 

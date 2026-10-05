@@ -194,6 +194,68 @@ GEMINI_API_KEY=dein-api-key
 
 ---
 
+# FFmpeg
+
+Das Problem mit FFmpeg sollte grundsätzlich bereits im Code behoben sein. Sollte FFmpeg dennoch Probleme verursachen, kann es manuell installiert und eingerichtet werden.
+
+## Windows
+### Option 1: Installation per Download
+
+1. Lade ein aktuelles FFmpeg-Build herunter:
+
+    * [FFmpeg – Download](https://ffmpeg.org/download.html)
+
+    * Für Windows werden häufig Builds von [gyan.dev](<https://www.gyan.dev/ffmpeg/builds/>) oder [BtbN](<https://github.com/BtbN/FFmpeg-Builds/releases>) verwendet.
+
+2. Entpacke die ZIP-Datei, z. B. nach:
+
+```Text
+C:\ffmpeg
+```
+
+
+3. Öffne den Ordner `bin`. Dort befindet sich die Datei `ffmpeg.exe`.
+
+4. Füge den `bin`-Ordner zu den Windows-Umgebungsvariablen hinzu:
+
+    * Rechtsklick auf „Dieser PC“ → „Eigenschaften“
+
+    * „Erweiterte Systemeinstellungen“ öffnen
+
+    * „Umgebungsvariablen…“ auswählen
+
+    * Unter „Path“ den folgenden Eintrag ergänzen:
+
+```Text
+C:\ffmpeg\bin
+```
+
+### Option 2: Installation über das Terminal
+
+Alternativ kann FFmpeg direkt über winget installiert werden:
+
+```powershell
+winget install --id Gyan.FFmpeg -e --source winget
+```
+
+## macOS
+
+Unter macOS ist die Installation über [Homebrew](https://brew.sh/) am einfachsten.
+
+Falls Homebrew noch nicht installiert ist, führe folgenden Befehl im Terminal aus:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+Anschließend FFmpeg installieren:
+
+```bash
+brew install ffmpeg
+```
+
+---
+
 # Django Apps
 
 Das Projekt verwendet folgende Django Apps:

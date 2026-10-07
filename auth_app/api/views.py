@@ -110,7 +110,7 @@ class CustomTokenRefreshView(TokenRefreshView):
         serializer = self.get_serializer(data={"refresh": refresh_token})
 
         try:
-            serializer.is_valid(raise_exception= True)
+            serializer.is_valid(raise_exception=True)
         except:
             self.refresh_token_invalid_error()
 
@@ -124,7 +124,7 @@ class CustomTokenRefreshView(TokenRefreshView):
         """Inserts the newly generated access token into the cookie"""
         access_token = serializer.validated_data.get("access")
 
-        response = Response({"detail": "Token refreshed"})
+        response = Response({"message": "access token refreshed"})
         
         response.set_cookie(
             key="access_token",

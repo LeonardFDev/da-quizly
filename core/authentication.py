@@ -3,23 +3,17 @@ from rest_framework_simplejwt.exceptions import InvalidToken
 
 
 class CookieJWTAuthentication(JWTAuthentication):
-    """the token can be used either via the header with "Authorization Bearer {token}" or via the cookie"""
+    """uses the token through the cookie"""
 
     def authenticate(self, request):
-        """Check where the token is and if it's still valid, otherwise you'll see an error"""
-        header = self.get_header(request)
+        """Check if in cookie, the token exists and if it is still valid, otherwise you will see an error"""
+        access_token = request.COOKIES.get("access_token")
 
-        if header is not None:
-            raw_token = self.get_raw_token(header)
-        else:
-            raw_token = request.COOKIES.get("access_token")
-
-        if raw_token is None:
+        if access_token is None:
             return None
 
         try:
-            validated_token = self.get_validated_token(raw_token)
+            validated_token = self.get_validated_token(access_token)
+            return self.get_user(validated_token), validated_token
         except InvalidToken:
             return None
-
-        return self.get_user(validated_token), validated_token

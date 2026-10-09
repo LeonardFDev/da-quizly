@@ -22,15 +22,25 @@ def customized_ffmpeg_exe():
     """The program cannot cope with the file name ffmpeg-win-x86_64-v7.1.exe of imageio_ffmpeg, 
        which is why you have to create a copy with a corresponding name change"""
 
+    BASE_DIR = Path(__file__).resolve().parent.parent
+
     ORIGINAL_FFMPEG_EXE = Path(imageio_ffmpeg.get_ffmpeg_exe())
-    KOPIE_OF_ORIGINAL_FFMPEG_EXE = Path("tools/ffmpeg.exe")
+
+    FFMPEG_DIR = BASE_DIR / "tools"
+    FFMPEG_DIR.mkdir(parents=True, exist_ok=True)
+
+    if os.name == "nt":
+        KOPIE_OF_ORIGINAL_FFMPEG_EXE = FFMPEG_DIR / "ffmpeg.exe"
+    else:
+        KOPIE_OF_ORIGINAL_FFMPEG_EXE = FFMPEG_DIR / "ffmpeg"
 
     if not KOPIE_OF_ORIGINAL_FFMPEG_EXE.exists():
-        KOPIE_OF_ORIGINAL_FFMPEG_EXE.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(ORIGINAL_FFMPEG_EXE, KOPIE_OF_ORIGINAL_FFMPEG_EXE)
 
-    ffmpeg_dir = Path("tools").resolve()
-    os.environ["PATH"] = str(ffmpeg_dir) + os.pathsep + os.environ["PATH"]
+    if os.name != "nt":
+        KOPIE_OF_ORIGINAL_FFMPEG_EXE.chmod(KOPIE_OF_ORIGINAL_FFMPEG_EXE.stat().st_mode | 0o111)
+
+    os.environ["PATH"] = (str(FFMPEG_DIR) + os.pathsep + os.environ.get("PATH", ""))
 
 
 def generate_quiz(url):
